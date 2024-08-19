@@ -1,6 +1,15 @@
 # Prerequisites
 *.d
 
+*idea*
+*user
+*x64
+*build*
+[Dd]ebug
+[Rr]elease
+packages
+*.vs*
+
 # Compiled Object files
 *.slo
 *.lo
