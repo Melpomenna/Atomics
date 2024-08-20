@@ -8,7 +8,6 @@ TEST(AtomicIntTest, Test_1) {
 	AtomicInt value{ 5 };
 
 	ASSERT_EQ(value.load(), 5);
-	ASSERT_EQ(value.load(), 5);
 }
 
 TEST(AtomicIntTest, Test_2) {
@@ -148,3 +147,55 @@ TEST(AtomicIntTest, Test_8) {
 	ASSERT_EQ(value.load(), base-source*static_cast<int>(size));
 	ASSERT_EQ(value.load(), res.load());
 }
+
+TEST(AtomicBoolTest, Test_1)
+{
+	AtomicBool flag{};
+
+	ASSERT_EQ(*flag, false);
+}
+
+TEST(AtomicBoolTest, Test_2)
+{
+	AtomicBool flag{ true };
+
+	ASSERT_EQ(flag.load(), true);
+}
+
+TEST(AtomicBoolTest, Test_3)
+{
+	AtomicBool flag{ true };
+
+	ASSERT_EQ(flag.load(), true);
+
+	flag.store(false);
+
+	ASSERT_EQ(flag.load(), false);
+}
+
+TEST(AtomicBoolTest, Test_4)
+{
+	AtomicBool flag{ false };
+	AtomicBool flag2{ true };
+
+	ASSERT_EQ(flag.load(), false);
+
+	flag = std::move(flag2);
+
+	ASSERT_EQ(flag.load(), true);
+	ASSERT_EQ(flag2.load(), false);
+}
+
+TEST(AtomicBoolTest, Test_5)
+{
+	AtomicBool flag{ false };
+	AtomicBool flag2{ true };
+
+	ASSERT_EQ(flag.load(), false);
+
+	flag = flag2;
+
+	ASSERT_EQ(flag.load(), true);
+	ASSERT_EQ(flag2.load(), true);
+}
+

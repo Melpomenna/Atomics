@@ -141,8 +141,8 @@ namespace atomics
 		else if constexpr (sizeof(value_type) == 1)
 		{
 			__asm {
-				mov edi, value
-				xchg ah, edi
+				mov ch, value
+				xchg ah, ch
 			}
 		}
 	}
