@@ -1,6 +1,9 @@
 #pragma once
 #include <pch.h>
 
+#define ATOMICS_EXPORT __declspec(dllexport)
+#define ATOMICS_WIN_API __stdcall
+
 namespace atomics
 {
 
@@ -10,24 +13,24 @@ namespace atomics
 	public:
 		using value_type = T;
 	public:
-		__declspec(dllexport) Atomic();
-		__declspec(dllexport) explicit Atomic(int value);
-		__declspec(dllexport) ~Atomic() = default;
+		ATOMICS_EXPORT Atomic();
+		ATOMICS_EXPORT explicit Atomic(int value);
+		ATOMICS_EXPORT ~Atomic() = default;
 
-		__declspec(dllexport) Atomic(const Atomic&);
-		__declspec(dllexport) Atomic& operator=(const Atomic& other);
+		ATOMICS_EXPORT Atomic(const Atomic&);
+		ATOMICS_EXPORT Atomic& ATOMICS_WIN_API operator=(const Atomic& other);
 
-		__declspec(dllexport) Atomic(Atomic&&) noexcept;
-		__declspec(dllexport) Atomic& operator=(Atomic&&) noexcept;
+		ATOMICS_EXPORT Atomic(Atomic&&) noexcept;
+		ATOMICS_EXPORT Atomic& ATOMICS_WIN_API operator=(Atomic&&) noexcept;
 
-		__declspec(dllexport) void add(value_type) noexcept;
-		__declspec(dllexport) void sub(value_type) noexcept;
-		__declspec(dllexport) void store(value_type value) noexcept;
+		ATOMICS_EXPORT void ATOMICS_WIN_API add(value_type) noexcept;
+		ATOMICS_EXPORT void ATOMICS_WIN_API sub(value_type) noexcept;
+		ATOMICS_EXPORT void ATOMICS_WIN_API store(value_type value) noexcept;
 
-		__declspec(dllexport) value_type load() const noexcept;
-		__declspec(dllexport) value_type operator*() const noexcept { return  load(); }
+		ATOMICS_EXPORT value_type ATOMICS_WIN_API load() const noexcept;
+		ATOMICS_EXPORT value_type ATOMICS_WIN_API operator*() const noexcept { return  load(); }
 	private:
-		__declspec(dllexport) value_type* ValueFieldAddr() const noexcept
+		ATOMICS_EXPORT value_type* ATOMICS_WIN_API ValueFieldAddr() const noexcept
 		{
 			return const_cast<value_type*>(&value_);
 		}
@@ -36,7 +39,10 @@ namespace atomics
 	};
 
 	template<class T>
-	Atomic<T>::Atomic() : value_(value_type()) {}
+	Atomic<T>::Atomic() : value_(value_type())
+	{
+		static_assert(sizeof(value_type) < 8);
+	}
 
 	template<class T>
 	Atomic<T>::Atomic(int value) : Atomic()
@@ -51,7 +57,7 @@ namespace atomics
 	}
 
 	template<class T>
-	Atomic<T>&  Atomic<T>::operator=(const Atomic& other)
+	Atomic<T>& ATOMICS_WIN_API Atomic<T>::operator=(const Atomic& other)
 	{
 		if (this == &other) return *this;
 		store(other.load());
@@ -66,7 +72,7 @@ namespace atomics
 	}
 
 	template<class T>
-	Atomic<T>&  Atomic<T>::operator=(Atomic&& other) noexcept
+	Atomic<T>& ATOMICS_WIN_API Atomic<T>::operator=(Atomic&& other) noexcept
 	{
 		if (this == &other) return *this;
 
@@ -77,9 +83,9 @@ namespace atomics
 	}
 
 	template<class T>
-	void  Atomic<T>::add(value_type value) noexcept
+	void  ATOMICS_WIN_API Atomic<T>::add(value_type value) noexcept
 	{
-		if  constexpr (sizeof(value_type) >= 4)
+		if  constexpr (sizeof(value_type) == 4)
 		{
 			value_type* addr = ValueFieldAddr();
 			__asm {
@@ -91,9 +97,9 @@ namespace atomics
 	}
 
 	template<class T>
-	void  Atomic<T>::sub(value_type value) noexcept
+	void  ATOMICS_WIN_API Atomic<T>::sub(value_type value) noexcept
 	{
-		if  constexpr (sizeof(value_type) >= 4)
+		if  constexpr (sizeof(value_type) == 4)
 		{
 			value_type* addr = ValueFieldAddr();
 			__asm {
@@ -105,10 +111,10 @@ namespace atomics
 	}
 
 	template<class T>
-	void  Atomic<T>::store(value_type value) noexcept
+	void ATOMICS_WIN_API Atomic<T>::store(value_type value) noexcept
 	{
 		value_type* addr = ValueFieldAddr();
-		if constexpr (sizeof(value_type) >= 4)
+		if constexpr (sizeof(value_type) == 4)
 		{
 			__asm {
 				mov ebx, addr
@@ -128,10 +134,10 @@ namespace atomics
 	}
 
 	template<class T>
-	typename Atomic<T>::value_type  Atomic<T>::load() const noexcept
+	typename Atomic<T>::value_type ATOMICS_WIN_API Atomic<T>::load() const noexcept
 	{
 		volatile value_type value = *ValueFieldAddr();
-		if  constexpr (sizeof(value_type) >= 4)
+		if  constexpr (sizeof(value_type) == 4)
 		{
 			__asm {
 				mov edi, value
@@ -152,4 +158,3 @@ namespace atomics
 
 using AtomicInt = atomics::Atomic<int>;
 using AtomicBool = atomics::Atomic<bool>;
-using AtomicSize_t = atomics::Atomic<unsigned long>;
